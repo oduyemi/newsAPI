@@ -99,6 +99,6 @@ async function addSuperAdmins() {
   }
 }
 
-addSuperAdmins().catch((err) => console.error("SuperAdmin setup failed:", err));
+// addSuperAdmins().catch((err) => console.error("SuperAdmin setup failed:", err));
 
 export default User;

@@ -127,5 +127,5 @@ function addSuperAdmins() {
         }
     });
 }
-addSuperAdmins().catch((err) => console.error("SuperAdmin setup failed:", err));
+// addSuperAdmins().catch((err) => console.error("SuperAdmin setup failed:", err));
 exports.default = User;

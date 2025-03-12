@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkAdmin = exports.authenticateUser = void 0;
+exports.checkSuperAdmin = exports.checkAdmin = exports.authenticateUser = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const user_model_1 = __importDefault(require("../models/user.model"));
@@ -52,7 +52,7 @@ const checkAdmin = (req, res, next) => {
         res.status(401).json({ message: "Unauthorized. User not authenticated." });
         return;
     }
-    const allowedRoles = new Set(["admin", "superAdmin"]);
+    const allowedRoles = new Set(["admin"]);
     if (!allowedRoles.has(req.user.role)) {
         res.status(403).json({ message: "Forbidden. User is not an admin." });
         return;
@@ -60,3 +60,11 @@ const checkAdmin = (req, res, next) => {
     next();
 };
 exports.checkAdmin = checkAdmin;
+const checkSuperAdmin = (req, res, next) => {
+    if (!req.user || req.user.role !== "superAdmin") {
+        res.status(403).json({ message: "Forbidden: Only super administrators can perform this action." });
+        return;
+    }
+    next();
+};
+exports.checkSuperAdmin = checkSuperAdmin;

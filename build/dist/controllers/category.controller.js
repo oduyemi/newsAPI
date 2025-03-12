@@ -32,14 +32,16 @@ exports.getCategories = getCategories;
 const getCategoryById = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const category = yield category_model_1.default.findById(id);
+        const category = yield category_model_1.default.findById(id).select("-password");
         if (!category) {
-            return res.status(404).json({ success: false, message: "Category not found" });
+            res.status(404).json({ message: "Categories not found" });
+            return;
         }
-        return res.status(200).json({ success: true, data: category });
+        res.status(200).json(category);
     }
     catch (error) {
-        return res.status(500).json({ success: false, message: "Server error", error });
+        console.error("Error retrieving category:", error);
+        res.status(500).json({ message: "Error retrieving category", error: error.message });
     }
 });
 exports.getCategoryById = getCategoryById;

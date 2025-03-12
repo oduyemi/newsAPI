@@ -46,7 +46,7 @@ export const checkAdmin = (req: AuthenticatedRequest, res: Response, next: NextF
     return;
   }
 
-  const allowedRoles = new Set(["admin"]);
+  const allowedRoles = new Set(["admin", "superAdmin"]);
   if (!allowedRoles.has(req.user.role)) {
     res.status(403).json({ message: "Forbidden. User is not an admin." });
     return;
