@@ -10,7 +10,7 @@ export interface INews extends Document {
   likes: number;
   dislikes: number;
   authorId: mongoose.Types.ObjectId;
-  categoryId: mongoose.Types.ObjectId;
+  tagId: mongoose.Types.ObjectId;
   publicationDate: Date;
   lastUpdated: Date;
   status: "draft" | "published";
@@ -64,9 +64,9 @@ const NewsSchema = new Schema<INews>(
         type: Schema.Types.ObjectId, 
         ref: "User", required: true 
     },
-    categoryId: { 
+    tagId: { 
         type: Schema.Types.ObjectId, 
-        ref: "Category", 
+        ref: "Tag", 
         required: true 
     },
 

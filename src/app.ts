@@ -11,7 +11,7 @@ import appRoutes from "./routes/app.route";
 import authRoutes from "./routes/auth.route";
 import newsRoutes from "./routes/news.route";
 import userRoutes from "./routes/user.route";
-import categoryRoutes from "./routes/category.route";
+import tagRoutes from "./routes/tag.route";
 
 
 dotenv.config();
@@ -62,7 +62,7 @@ app.use("/api/v1", appRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/news", newsRoutes);
 app.use("/api/v1/users", userRoutes);
-app.use("/api/v1/cateories", categoryRoutes);
+app.use("/api/v1/tags", tagRoutes);
 
 
 app.all("*", (req, res, next) => {

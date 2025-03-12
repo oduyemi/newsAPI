@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-export interface ICategory extends Document {
+export interface ITag extends Document {
   _id: mongoose.Types.ObjectId;
   name: string;
   description?: string;
@@ -8,7 +8,7 @@ export interface ICategory extends Document {
   updatedAt: Date;
 }
 
-const CategorySchema = new Schema<ICategory>(
+const TagSchema = new Schema<ITag>(
     {
         name: { 
             type: String, 
@@ -24,4 +24,4 @@ const CategorySchema = new Schema<ICategory>(
     }
 );
 
-export default mongoose.model<ICategory>("Category", CategorySchema);
+export default mongoose.model<ITag>("Tag", TagSchema);

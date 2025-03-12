@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import News from "../models/news.model";
-import Category from "../models/category.model"; 
+import Tag from "../models/tag.model"; 
 import User from "../models/user.model"; 
 
 // Get All News
@@ -14,7 +14,7 @@ export const getNews = async (req: Request, res: Response): Promise<void> => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate("categoryId", "name description") 
+      .populate("tagId", "name description") 
       .populate("authorId", "name email"); 
 
     const total = await News.countDocuments();
@@ -36,7 +36,7 @@ export const getNewsById = async (req: Request, res: Response): Promise<void> =>
       { $inc: { views: 1 } },
       { new: true }
     )
-      .populate("categoryId", "name description")
+      .populate("tagId", "name description")
       .populate("authorId", "name email");
 
     if (!news) {
@@ -51,20 +51,20 @@ export const getNewsById = async (req: Request, res: Response): Promise<void> =>
   }
 };
 
-// Get News by Category
-export const getNewsByCategory = async (req: Request, res: Response): Promise<void> => {
+// Get News by Tag
+export const getNewsByTag = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { categoryId } = req.params;
-    const news = await News.find({ categoryId })
-      .populate("categoryId", "name description")
+    const { tagId } = req.params;
+    const news = await News.find({ tagId })
+      .populate("tagId", "name description")
       .populate("authorId", "name email");
     if (!news || news.length === 0) {
-      res.status(404).json({ success: false, message: "No news found for this category" });
+      res.status(404).json({ success: false, message: "No news found for this tag" });
       return;
     }
 
-    // Increment views for each news item in the found category
-    await News.updateMany({ categoryId }, { $inc: { views: 1 } });
+    // Increment views for each news item in the found tag
+    await News.updateMany({ tagId }, { $inc: { views: 1 } });
 
     res.status(200).json({ success: true, data: news });
   } catch (error) {
@@ -76,11 +76,11 @@ export const getNewsByCategory = async (req: Request, res: Response): Promise<vo
 // Create News: Only administrators
 export const createNews = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { title, text, images, tags, categoryId, authorId, status, content, summary, source, url, socialMedia, relatedNews } = req.body;
+    const { title, text, images, tags, tagId, authorId, status, content, summary, source, url, socialMedia, relatedNews } = req.body;
     
-    const category = await Category.findById(categoryId);
-    if (!category) {
-      res.status(400).json({ success: false, message: "Category not found" });
+    const tag = await Tag.findById(tagId);
+    if (!tag) {
+      res.status(400).json({ success: false, message: "Tag not found" });
       return;
     }
 
@@ -95,7 +95,7 @@ export const createNews = async (req: Request, res: Response): Promise<void> => 
       text,
       images,
       tags,
-      categoryId,
+      tagId,
       authorId,
       status,
       content,
@@ -118,14 +118,14 @@ export const createNews = async (req: Request, res: Response): Promise<void> => 
 export const updateNews = async (req: Request, res: Response): Promise<void> => {
   try {
       const { id } = req.params;
-      const { title, text, images, tags, categoryId, authorId, status, content, summary, source, url, socialMedia, relatedNews } = req.body;
+      const { title, text, images, tags, tagId, authorId, status, content, summary, source, url, socialMedia, relatedNews } = req.body;
 
-      // Validate category and author
-      const category = await Category.findById(categoryId);
+      // Validate tag and author
+      const tag = await Tag.findById(tagId);
       const author = await User.findById(authorId);
       
-      if (!category) {
-          res.status(400).json({ success: false, message: "Category not found" });
+      if (!tag) {
+          res.status(400).json({ success: false, message: "Tag not found" });
           return;
       }
       if (!author) {
@@ -135,9 +135,9 @@ export const updateNews = async (req: Request, res: Response): Promise<void> => 
 
       const updatedNews = await News.findByIdAndUpdate(
           id,
-          { title, text, images, tags, categoryId, authorId, status, content, summary, source, url, socialMedia, relatedNews },
+          { title, text, images, tags, tagId, authorId, status, content, summary, source, url, socialMedia, relatedNews },
           { new: true }
-      ).populate("categoryId", "name description")
+      ).populate("tagId", "name description")
        .populate("authorId", "name email");
 
       if (!updatedNews) {
