@@ -46,11 +46,19 @@ export const checkAdmin = (req: AuthenticatedRequest, res: Response, next: NextF
     return;
   }
 
-  const allowedRoles = new Set(["admin", "superAdmin"]);
+  const allowedRoles = new Set(["admin"]);
   if (!allowedRoles.has(req.user.role)) {
     res.status(403).json({ message: "Forbidden. User is not an admin." });
     return;
   }
 
+  next();
+};
+
+export const checkSuperAdmin = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
+  if (!req.user || req.user.role !== "superAdmin") {
+      res.status(403).json({ message: "Forbidden: Only super administrators can perform this action." });
+      return;
+  }
   next();
 };
