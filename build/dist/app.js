@@ -14,8 +14,9 @@ const index_1 = require("./config/index");
 const app_error_1 = __importDefault(require("./utils/app.error"));
 const app_route_1 = __importDefault(require("./routes/app.route"));
 const auth_route_1 = __importDefault(require("./routes/auth.route"));
-// import newsRoutes from "./routes/news.route";
+const news_route_1 = __importDefault(require("./routes/news.route"));
 const user_route_1 = __importDefault(require("./routes/user.route"));
+const tag_route_1 = __importDefault(require("./routes/tag.route"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const corsOptions = {
@@ -51,8 +52,9 @@ app.use((0, express_rate_limit_1.default)({
 // Routes
 app.use("/api/v1", app_route_1.default);
 app.use("/api/v1/auth", auth_route_1.default);
-// app.use("/api/v1/news", newsRoutes);
+app.use("/api/v1/news", news_route_1.default);
 app.use("/api/v1/users", user_route_1.default);
+app.use("/api/v1/tags", tag_route_1.default);
 app.all("*", (req, res, next) => {
     next(new app_error_1.default(`The route ${req.originalUrl} with the ${req.method} method does not exist on this server! 💨`, 404));
 });

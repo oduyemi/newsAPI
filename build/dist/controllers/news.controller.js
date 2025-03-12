@@ -12,9 +12,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteNews = exports.updateNews = exports.createNews = exports.getNewsByCategory = exports.getNewsById = exports.getNews = void 0;
+exports.deleteNews = exports.updateNews = exports.createNews = exports.getNewsByTag = exports.getNewsById = exports.getNews = void 0;
 const news_model_1 = __importDefault(require("../models/news.model"));
-const category_model_1 = __importDefault(require("../models/category.model"));
+const tag_model_1 = __importDefault(require("../models/tag.model"));
 const user_model_1 = __importDefault(require("../models/user.model"));
 // Get All News
 const getNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -26,13 +26,13 @@ const getNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit)
-            .populate("categoryId", "name description")
+            .populate("tagId", "name description")
             .populate("authorId", "name email");
         const total = yield news_model_1.default.countDocuments();
-        return res.status(200).json({ success: true, data: news, total });
+        res.status(200).json({ success: true, data: news, total });
     }
     catch (error) {
-        return res.status(500).json({ success: false, message: "Server error", error });
+        res.status(500).json({ success: false, message: "Server error", error });
     }
 });
 exports.getNews = getNews;
@@ -41,53 +41,59 @@ const getNewsById = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
     try {
         const { id } = req.params;
         const news = yield news_model_1.default.findByIdAndUpdate(id, { $inc: { views: 1 } }, { new: true })
-            .populate('categoryId', 'name description')
-            .populate('authorId', 'name email');
+            .populate("tagId", "name description")
+            .populate("authorId", "name email");
         if (!news) {
-            return res.status(404).json({ success: false, message: 'News not found' });
+            res.status(404).json({ success: false, message: "News not found" });
+            return;
         }
-        return res.status(200).json({ success: true, data: news });
+        res.status(200).json({ success: true, data: news });
     }
     catch (error) {
-        return res.status(500).json({ success: false, message: 'Server error', error });
+        res.status(500).json({ success: false, message: "Server error", error });
     }
 });
 exports.getNewsById = getNewsById;
-// Get News by Category
-const getNewsByCategory = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// Get News by Tag
+const getNewsByTag = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { categoryId } = req.params; // Use categoryId to refer directly to the parameter
-        const news = yield news_model_1.default.find({ categoryId })
-            .populate("categoryId", "name description")
+        const { tagId } = req.params;
+        const news = yield news_model_1.default.find({ tagId })
+            .populate("tagId", "name description")
             .populate("authorId", "name email");
         if (!news || news.length === 0) {
-            return res.status(404).json({ success: false, message: "No news found for this category" });
+            res.status(404).json({ success: false, message: "No news found for this tag" });
+            return;
         }
-        // Increment views for each news item in the found category
-        yield news_model_1.default.updateMany({ categoryId }, { $inc: { views: 1 } });
-        return res.status(200).json({ success: true, data: news });
+        // Increment views for each news item in the found tag
+        yield news_model_1.default.updateMany({ tagId }, { $inc: { views: 1 } });
+        res.status(200).json({ success: true, data: news });
     }
     catch (error) {
-        return res.status(500).json({ success: false, message: "Server error", error });
+        res.status(500).json({ success: false, message: "Server error", error });
     }
 });
-exports.getNewsByCategory = getNewsByCategory;
+exports.getNewsByTag = getNewsByTag;
 // Create News: Only administrators
 const createNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { title, text, images, tags, categoryId, authorId, status, content, summary, source, url, socialMedia, relatedNews } = req.body;
-        const category = yield category_model_1.default.findById(categoryId);
+        const { title, text, images, tags, tagId, authorId, status, content, summary, source, url, socialMedia, relatedNews } = req.body;
+        const tag = yield tag_model_1.default.findById(tagId);
+        if (!tag) {
+            res.status(400).json({ success: false, message: "Tag not found" });
+            return;
+        }
         const author = yield user_model_1.default.findById(authorId);
-        if (!category)
-            return res.status(400).json({ success: false, message: "Category not found" });
-        if (!author)
-            return res.status(400).json({ success: false, message: "Author not found" });
+        if (!author) {
+            res.status(400).json({ success: false, message: "Author not found" });
+            return;
+        }
         const news = yield news_model_1.default.create({
             title,
             text,
             images,
             tags,
-            categoryId,
+            tagId,
             authorId,
             status,
             content,
@@ -97,10 +103,11 @@ const createNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
             socialMedia,
             relatedNews,
         });
-        return res.status(201).json({ success: true, data: news });
+        res.status(201).json({ success: true, data: news });
     }
     catch (error) {
-        return res.status(500).json({ success: false, message: "Server error", error });
+        console.error("Error creating news:", error);
+        res.status(500).json({ success: false, message: "Server error", error });
     }
 });
 exports.createNews = createNews;
@@ -108,22 +115,28 @@ exports.createNews = createNews;
 const updateNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id } = req.params;
-        const { title, text, images, tags, categoryId, authorId, status, content, summary, source, url, socialMedia, relatedNews } = req.body;
-        // Validate category and author
-        const category = yield category_model_1.default.findById(categoryId);
+        const { title, text, images, tags, tagId, authorId, status, content, summary, source, url, socialMedia, relatedNews } = req.body;
+        // Validate tag and author
+        const tag = yield tag_model_1.default.findById(tagId);
         const author = yield user_model_1.default.findById(authorId);
-        if (!category)
-            return res.status(400).json({ success: false, message: "Category not found" });
-        if (!author)
-            return res.status(400).json({ success: false, message: "Author not found" });
-        const updatedNews = yield news_model_1.default.findByIdAndUpdate(id, { title, text, images, tags, categoryId, authorId, status, content, summary, source, url, socialMedia, relatedNews }, { new: true }).populate("categoryId", "name description")
+        if (!tag) {
+            res.status(400).json({ success: false, message: "Tag not found" });
+            return;
+        }
+        if (!author) {
+            res.status(400).json({ success: false, message: "Author not found" });
+            return;
+        }
+        const updatedNews = yield news_model_1.default.findByIdAndUpdate(id, { title, text, images, tags, tagId, authorId, status, content, summary, source, url, socialMedia, relatedNews }, { new: true }).populate("tagId", "name description")
             .populate("authorId", "name email");
-        if (!updatedNews)
-            return res.status(404).json({ success: false, message: "News not found" });
-        return res.status(200).json({ success: true, data: updatedNews });
+        if (!updatedNews) {
+            res.status(404).json({ success: false, message: "News not found" });
+            return;
+        }
+        res.status(200).json({ success: true, data: updatedNews });
     }
     catch (error) {
-        return res.status(500).json({ success: false, message: "Server error", error });
+        res.status(500).json({ success: false, message: "Server error", error });
     }
 });
 exports.updateNews = updateNews;
@@ -132,12 +145,14 @@ const deleteNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     try {
         const { id } = req.params;
         const deletedNews = yield news_model_1.default.findByIdAndDelete(id);
-        if (!deletedNews)
-            return res.status(404).json({ success: false, message: "News not found" });
-        return res.status(200).json({ success: true, message: "News deleted successfully" });
+        if (!deletedNews) {
+            res.status(404).json({ success: false, message: "News not found" });
+            return;
+        }
+        res.status(200).json({ success: true, message: "News deleted successfully" });
     }
     catch (error) {
-        return res.status(500).json({ success: false, message: "Server error", error });
+        res.status(500).json({ success: false, message: "Server error", error });
     }
 });
 exports.deleteNews = deleteNews;

@@ -34,74 +34,16 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = __importStar(require("mongoose"));
-const NewsSchema = new mongoose_1.Schema({
-    title: {
+const TagSchema = new mongoose_1.Schema({
+    name: {
         type: String,
         required: true,
-        trim: true
+        unique: true
     },
-    text: {
-        type: String,
-        required: true
+    description: {
+        type: String
     },
-    images: {
-        type: [String],
-        default: []
-    },
-    tags: {
-        type: [String],
-        required: true
-    },
-    views: {
-        type: Number,
-        default: 0
-    },
-    likes: {
-        type: Number,
-        default: 0
-    },
-    dislikes: {
-        type: Number,
-        default: 0
-    },
-    // Relations
-    authorId: {
-        type: mongoose_1.Schema.Types.ObjectId,
-        ref: "User", required: true
-    },
-    tagId: {
-        type: mongoose_1.Schema.Types.ObjectId,
-        ref: "Tag",
-        required: true
-    },
-    // Metadata
-    publicationDate: {
-        type: Date,
-        default: Date.now
-    },
-    lastUpdated: {
-        type: Date,
-        default: Date.now
-    },
-    status: {
-        type: String,
-        enum: ["draft", "published"],
-        default: "draft"
-    },
-    // Optional Fields
-    content: { type: String },
-    summary: { type: String },
-    author: { type: String },
-    source: { type: String },
-    url: { type: String },
-    socialMedia: { type: String },
-    // References
-    relatedNews: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "News" }],
-    reactions: [{ type: mongoose_1.Schema.Types.ObjectId, ref: "NewsReaction" }],
-}, { timestamps: true });
-NewsSchema.virtual("populatedReactions", {
-    ref: "NewsReaction",
-    localField: "_id",
-    foreignField: "newsId",
+}, {
+    timestamps: true
 });
-exports.default = mongoose_1.default.model("News", NewsSchema);
+exports.default = mongoose_1.default.model("Tag", TagSchema);

@@ -12,79 +12,62 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteReaction = exports.createReaction = exports.getDislikes = exports.getLikes = void 0;
+exports.getReactionsForNews = exports.toggleReaction = void 0;
 const react_model_1 = __importDefault(require("../models/react.model"));
 const news_model_1 = __importDefault(require("../models/news.model"));
-// Get All Likes 
-const getLikes = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// Add or Toggle Reaction (Like/Dislike)
+const toggleReaction = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { newsId } = req.params;
-        const likes = yield react_model_1.default.find({ newsId, reactionType: 'like' }).populate("userId", "name email");
-        if (!likes) {
-            return res.status(404).json({ success: false, message: "No likes found" });
+        const { userId, reaction } = req.body;
+        if (!["like", "dislike"].includes(reaction)) {
+            res.status(400).json({ success: false, message: "Invalid reaction type" });
+            return;
         }
-        return res.status(200).json({ success: true, data: likes });
-    }
-    catch (error) {
-        return res.status(500).json({ success: false, message: "Server error", error });
-    }
-});
-exports.getLikes = getLikes;
-// Get All Dislikes
-const getDislikes = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { newsId } = req.params;
-        const dislikes = yield react_model_1.default.find({ newsId, reactionType: 'dislike' }).populate("userId", "name email");
-        if (!dislikes) {
-            return res.status(404).json({ success: false, message: "No dislikes found" });
-        }
-        return res.status(200).json({ success: true, data: dislikes });
-    }
-    catch (error) {
-        return res.status(500).json({ success: false, message: "Server error", error });
-    }
-});
-exports.getDislikes = getDislikes;
-// Create Reaction (Like or Dislike)
-const createReaction = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const { newsId } = req.params;
-        const { userId, reactionType } = req.body;
-        if (!['like', 'dislike'].includes(reactionType)) {
-            return res.status(400).json({ success: false, message: "Invalid reaction type" });
-        }
-        const news = yield news_model_1.default.findById(newsId);
-        if (!news) {
-            return res.status(404).json({ success: false, message: "News article not found" });
-        }
-        const existingReaction = yield react_model_1.default.findOne({ userId, newsId });
+        const existingReaction = yield react_model_1.default.findOne({ newsId, userId });
         if (existingReaction) {
-            return res.status(400).json({ success: false, message: "User has already reacted to this news" });
+            if (existingReaction.reaction === reaction) {
+                yield react_model_1.default.findByIdAndDelete(existingReaction._id);
+                // Update news counts
+                const updateField = reaction === "like" ? { $inc: { likes: -1 } } : { $inc: { dislikes: -1 } };
+                yield news_model_1.default.findByIdAndUpdate(newsId, updateField);
+                res.status(200).json({ success: true, message: `Removed ${reaction}` });
+            }
+            else {
+                existingReaction.reaction = reaction;
+                yield existingReaction.save();
+                // Update news counts
+                const updateFields = reaction === "like"
+                    ? { $inc: { likes: 1, dislikes: -1 } }
+                    : { $inc: { likes: -1, dislikes: 1 } };
+                yield news_model_1.default.findByIdAndUpdate(newsId, updateFields);
+                res.status(200).json({ success: true, message: `Changed reaction to ${reaction}` });
+            }
         }
-        const reaction = yield react_model_1.default.create({
-            userId,
-            newsId,
-            reactionType,
-        });
-        return res.status(201).json({ success: true, data: reaction });
+        else {
+            // Create new reaction
+            const newReaction = new react_model_1.default({ newsId, userId, reaction });
+            yield newReaction.save();
+            // Update news counts
+            const updateField = reaction === "like" ? { $inc: { likes: 1 } } : { $inc: { dislikes: 1 } };
+            yield news_model_1.default.findByIdAndUpdate(newsId, updateField);
+            res.status(201).json({ success: true, message: `Added ${reaction}` });
+        }
     }
     catch (error) {
-        return res.status(500).json({ success: false, message: "Server error", error });
+        res.status(500).json({ success: false, message: "Server error", error });
     }
 });
-exports.createReaction = createReaction;
-// Delete Reaction (Like or Dislike)
-const deleteReaction = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+exports.toggleReaction = toggleReaction;
+// Get All Reactions 
+const getReactionsForNews = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { id } = req.params;
-        const deletedReaction = yield react_model_1.default.findByIdAndDelete(id);
-        if (!deletedReaction) {
-            return res.status(404).json({ success: false, message: "Reaction not found" });
-        }
-        return res.status(200).json({ success: true, message: "Reaction deleted successfully" });
+        const { newsId } = req.params;
+        const reactions = yield react_model_1.default.find({ newsId }).populate("userId", "name email");
+        res.status(200).json({ success: true, data: reactions });
     }
     catch (error) {
-        return res.status(500).json({ success: false, message: "Server error", error });
+        res.status(500).json({ success: false, message: "Server error", error });
     }
 });
-exports.deleteReaction = deleteReaction;
+exports.getReactionsForNews = getReactionsForNews;

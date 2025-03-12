@@ -21,7 +21,6 @@ export interface INews extends Document {
   url?: string;
   socialMedia?: string;
   relatedNews: mongoose.Types.ObjectId[];
-  comments: mongoose.Types.ObjectId[];
   reactions: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
@@ -95,18 +94,10 @@ const NewsSchema = new Schema<INews>(
 
     // References
     relatedNews: [{ type: Schema.Types.ObjectId, ref: "News" }],
-    comments: [{ type: Schema.Types.ObjectId, ref: "Comment" }],
     reactions: [{ type: Schema.Types.ObjectId, ref: "NewsReaction" }],
   },
   { timestamps: true }
 );
-
-// ✅ Virtual Fields (For Populating)
-NewsSchema.virtual("populatedComments", {
-  ref: "Comment",
-  localField: "_id",
-  foreignField: "newsId",
-});
 
 NewsSchema.virtual("populatedReactions", {
   ref: "NewsReaction",
