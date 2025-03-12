@@ -1,9 +1,10 @@
 import mongoose, { Schema, Document } from "mongoose";
 
 export interface INewsReaction extends Document {
+  _id: mongoose.Types.ObjectId;
   newsId: mongoose.Types.ObjectId;
   userId: mongoose.Types.ObjectId;
-  reaction: "like" | "dislike"; // User's reaction
+  reaction: "like" | "dislike"; 
 }
 
 const NewsReactionSchema = new Schema<INewsReaction>(
