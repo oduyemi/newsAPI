@@ -7,9 +7,9 @@ import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { db, store } from "./config/index"; 
 import AppError from "./utils/app.error";
-// import appRoutes from "./routes/app.route";
-// import authRoutes from "./routes/auth.route";
-// import productRoutes from "./routes/product.route";
+import appRoutes from "./routes/app.route";
+import authRoutes from "./routes/auth.route";
+// import newsRoutes from "./routes/news.route";
 // import userRoutes from "./routes/user.route";
 
 
@@ -57,9 +57,9 @@ app.use(rateLimit({
 
 
 // Routes
-// app.use("/api/v1", appRoutes);
-// app.use("/api/v1/auth", authRoutes);
-// app.use("/api/v1/products", productRoutes);
+app.use("/api/v1", appRoutes);
+app.use("/api/v1/auth", authRoutes);
+// app.use("/api/v1/news", newsRoutes);
 // app.use("/api/v1/users", userRoutes);
 
 app.all("*", (req, res, next) => {
